@@ -69,7 +69,7 @@ RUN echo "export USER=root" >> ${HOME}/.zshrc && \
     echo "export USER=${NB_USER}" >> ${HOME}/.zshrc
 
 # Install Python environment with mamba
-RUN echo 'export MAMBA_ROOT_PREFIX=/home/${NB_USER}/mamba' >> ${HOME}/.zshrc
+RUN echo 'export PATH=${MAMBA_ROOT_PREFIX}/bin:${PATH}' >> ${HOME}/.zshrc
 
 # Initialize mamba for zsh
 RUN mamba init zsh && \
@@ -81,7 +81,8 @@ RUN mamba init zsh && \
 RUN pip install bids-validator pybids nilearn nipype
 
 # Clean PATH duplicates
-RUN echo "export PATH=$(perl -e 'print join(":", grep { !$seen{$_}++ } split(/:/, $ENV{PATH}))" >> ${HOME}/.zshrc
+# RUN echo "export PATH=$(perl -e 'print join(\":\", grep { !$seen{$_}++ } split(/:/, $ENV{PATH}))')" >>
+# pamcconnell/.zshrc
 
 # Set entrypoint to Zsh
 ENTRYPOINT ["/bin/zsh"]
