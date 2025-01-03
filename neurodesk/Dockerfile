@@ -38,12 +38,13 @@ RUN groupadd -g ${NB_GID} ${NB_USER} && \
 USER ${NB_USER}
 RUN cd ${HOME}
 USER root
+RUN cd /home/${NB_USER}
 
 # Install Oh My Zsh
-RUN wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O install.sh
-RUN  sh install.sh
+RUN  sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 # Install Zinit
+USER ${NB_USER}
 RUN mkdir -p "${HOME}/.local/share/zinit" && \
     zsh -c "$(curl -fsSL https://raw.githubusercontent.com/zdharma-continuum/zinit/main/scripts/install.sh)"
 
