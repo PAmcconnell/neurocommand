@@ -35,7 +35,6 @@ RUN if ! id -u ${NB_USER} > /dev/null 2>&1; then \
     adduser ${NB_USER} sudo; \
     fi
 
-
 # Switch to the new user
 USER ${NB_USER}
 WORKDIR /home/${NB_USER}
@@ -58,6 +57,7 @@ USER root
 
 # Copy custom .zshrc and .p10k.zsh and fix permissions
 COPY .zshrc ${HOME}/.zshrc
+COPY .bashrc ${HOME}/.bashrc
 COPY .p10k.zsh ${HOME}/.p10k.zsh
 RUN chown ${NB_USER}:${NB_USER} ${HOME}/.zshrc ${HOME}/.p10k.zsh
 RUN chsh -s /bin/zsh ${NB_USER}
@@ -86,7 +86,7 @@ RUN pip install bids-validator pybids nilearn nipype
 # pamcconnell/.zshrc
 
 # Set entrypoint to Zsh
-ENTRYPOINT ["/bin/zsh"]
+ENTRYPOINT ["/usr/bin/zsh"]
 
 # docker run -it --entrypoint /bin/bash neurodesk:custom
 
