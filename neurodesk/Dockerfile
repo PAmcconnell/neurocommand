@@ -67,6 +67,9 @@ USER ${NB_USER}
 
 # Add configurations
 RUN echo "export USER=${NB_USER}" >> ${HOME}/.zshrc
+RUN echo "mamba init zsh"
+RUN echo "zsh"
+RUN echo "source ${HOME}/.zshrc"
 
 # # Install Python environment with mamba
 # RUN echo 'export PATH=${MAMBA_ROOT_PREFIX}/bin:${PATH}' >> ${HOME}/.zshrc

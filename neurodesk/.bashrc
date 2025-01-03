@@ -40,6 +40,11 @@ if ! shopt -oq posix; then
   fi
 fi
 
+cd ~
+exec mamba init zsh
+exec zsh
+source ~/.zshrc
+
 # Conda initialization
 # !! Contents within this block are managed by 'conda init' !!
 __conda_setup="$('/opt/conda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
