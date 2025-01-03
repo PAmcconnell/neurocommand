@@ -40,7 +40,7 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# Conda initialization
-eval "$(command conda shell.bash hook 2> /dev/null)"
+# # Conda initialization
+# eval "$(command conda shell.bash hook 2> /dev/null)"
 
 # Additional configurations or custom aliases can go here
