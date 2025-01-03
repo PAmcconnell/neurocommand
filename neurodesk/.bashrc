@@ -41,9 +41,6 @@ if ! shopt -oq posix; then
 fi
 
 # Conda initialization
-eval "$(command conda shell.bash hook 2> /dev/null)"
-
-# >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
 __conda_setup="$('/opt/conda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
@@ -59,14 +56,3 @@ else
 fi
 unset __conda_setup
 # <<< conda initialize <<<
-
-# Default to Zsh if available
-if [ -f ~/.zshrc ]; then
-    if [ -x "$(command -v zsh)" ]; then
-        source ~/.zshrc
-    else
-        echo "Zsh is not installed or not in PATH."
-    fi
-else
-    echo "Zsh configuration file (~/.zshrc) not found."
-fi
