@@ -5,7 +5,7 @@ FROM vnmd/neurodesktop:2024-12-06
 WORKDIR /neurodesk
 COPY . /neurodesk/
 
-# Set username and password
+# Set username and environment variables
 ARG NB_USER=pamcconnell
 ARG NB_UID=1100
 ARG NB_GID=1100
@@ -15,31 +15,53 @@ ENV NB_USER=${NB_USER} \
     HOME=/home/${NB_USER} \
     ZSH="${HOME}/.oh-my-zsh"
 
-# Add user and install required packages
-RUN apt-get update && apt-get install -y zsh git curl wget fonts-powerline perl && apt-get clean && \
-    groupadd -f -g ${NB_GID} ${NB_USER} && \
-    useradd -m -s /bin/zsh -u ${NB_UID} -g ${NB_GID} ${NB_USER} && \
+# Ensure root user and install required packages
+USER root
+RUN apt-get update && apt-get install -y \
+    sudo \
+    zsh \
+    git \
+    curl \
+    wget \
+    fonts-powerline \
+    perl && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create user and set permissions
+RUN groupadd -g ${NB_GID} ${NB_USER} && \
+    useradd -m -s /usr/bin/zsh -u ${NB_UID} -g ${NB_GID} ${NB_USER} && \
     echo "${NB_USER}:neurodesk" | chpasswd && \
-    adduser ${NB_USER} sudo && \
-    RUNZSH=no sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" || echo "Oh My Zsh already installed"
+    usermod -aG sudo ${NB_USER} && \
+    echo "${NB_USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Switch to the new user
 USER ${NB_USER}
-# Install Oh My Zsh and Zinit
-RUN RUNZSH=no sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" || echo "Oh My Zsh already installed" && \
-    mkdir -p "${HOME}/.local/share/zinit" && \
+
+# Install Oh My Zsh
+RUN cd ${HOME} && \
+    echo "no sh -c wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O" && \
+    sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" "" --unattended
+
+# Install Zinit
+RUN mkdir -p "${HOME}/.local/share/zinit" && \
     zsh -c "$(curl -fsSL https://raw.githubusercontent.com/zdharma-continuum/zinit/main/scripts/install.sh)"
+
+# Copy custom shell configuration files
 COPY .zshrc ${HOME}/.zshrc
 COPY .bashrc ${HOME}/.bashrc
-RUN chown ${NB_USER}:${NB_USER} ${HOME}/.zshrc ${HOME}/.bashrc
+
+# Fix permissions for copied files
+USER root
+RUN chown -R ${NB_USER}:${NB_USER} ${HOME}/.zshrc ${HOME}/.bashrc
 
 # Switch to Zsh as the default shell
-# Add environment configuration and change default shell
-RUN chsh -s /usr/bin/zsh ${NB_USER} && \
-# Add environment configuration
-RUN echo "export USER=${NB_USER}" >> ${HOME}/.zshrc && \
-    apt-get clean && \
-    chown ${NB_USER}:${NB_USER} ${HOME}/.zshrc ${HOME}/.bashrc
+RUN chsh -s /usr/bin/zsh ${NB_USER}
 
+# Add custom environment configurations
+USER ${NB_USER}
+RUN echo "export USER=${NB_USER}" >> ${HOME}/.zshrc
+
+# Entry point
+WORKDIR ${HOME}
 ENTRYPOINT ["/usr/bin/zsh"]
 HEALTHCHECK NONE
