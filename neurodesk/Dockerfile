@@ -9,7 +9,7 @@ WORKDIR /neurodesk
 USER root
 
 # Install required packages
-RUN apt-get update && apt-get install -y \
+RUN sudo apt-get update && apt-get install -y \
     zsh \
     git \
     curl \
@@ -40,7 +40,7 @@ USER ${NB_USER}
 WORKDIR /home/${NB_USER}
 
 # Install Oh My Zsh
-RUN RUNZSH=no sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
+RUN wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O - | zsh || echo "Oh My Zsh already installed"
 
 # Install Zinit
 RUN mkdir -p "${HOME}/.local/share/zinit" && \
@@ -59,37 +59,33 @@ USER root
 COPY .zshrc ${HOME}/.zshrc
 COPY .bashrc ${HOME}/.bashrc
 COPY .p10k.zsh ${HOME}/.p10k.zsh
-RUN chown ${NB_USER}:${NB_USER} ${HOME}/.zshrc ${HOME}/.p10k.zsh
-RUN chsh -s /usr/bin/zsh ${NB_USER}
+RUN sudo chown ${NB_USER}:${NB_USER} ${HOME}/.zshrc ${HOME}/.p10k.zsh
+RUN sudo chsh -s /usr/bin/zsh ${NB_USER}
 
 # Switch back to user
 USER ${NB_USER}
 
 # Add configurations
-RUN echo "export USER=root" >> ${HOME}/.zshrc && \
-    echo "export USER=${NB_USER}" >> ${HOME}/.zshrc
+RUN echo "export USER=${NB_USER}" >> ${HOME}/.zshrc
 
-# Install Python environment with mamba
-RUN echo 'export PATH=${MAMBA_ROOT_PREFIX}/bin:${PATH}' >> ${HOME}/.zshrc
+# # Install Python environment with mamba
+# RUN echo 'export PATH=${MAMBA_ROOT_PREFIX}/bin:${PATH}' >> ${HOME}/.zshrc
 
-# Initialize mamba for zsh
-RUN mamba init zsh && \
-    mamba create -n neurodevenv_test python=3.10 ipykernel -y && \
-    mamba run -n neurodevenv_test python -m ipykernel install --user --name neurodevenv_test --display-name "Python (neurodevenv_test)"
+# # Initialize mamba for zsh
+# RUN mamba init zsh && \
+#     mamba create -n neurodevenv_test python=3.10 ipykernel -y && \
+#     mamba run -n neurodevenv_test python -m ipykernel install --user --name neurodevenv_test --display-name "Python (neurodevenv_test)"
 
 # # Install additional Python packages
 # RUN pip install bids-validator pybids nilearn nipype
 
 # Set entrypoint to Zsh
-ENTRYPOINT ["/bin/bash", "-c"]
+ENTRYPOINT ["/bin/bash"]
 HEALTHCHECK NONE
 
 # RUN source ${HOME}/.zshrc
 # HEALTHCHECK CMD [ "/bin/bash", "-c", "/etc/jupyter/docker_healthcheck.py || echo 'Health check failed' && exit 1" ]
 # RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-
-
 
 
 # docker run -it --entrypoint /bin/bash neurodesk:custom
