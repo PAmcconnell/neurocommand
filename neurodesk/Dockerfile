@@ -70,7 +70,7 @@ RUN echo "export USER=root" >> ${HOME}/.zshrc && \
 
 # Install Python environment with mamba
 RUN echo 'export MAMBA_ROOT_PREFIX=/home/${NB_USER}/mamba' >> ${HOME}/.zshrc && \
-    mamba init -y && \
+    mamba init && \
     mamba create -n neurodevenv_test python=3.10 ipykernel -y && \
     echo "mamba activate neurodevenv_test" >> ${HOME}/.zshrc && \
     python -m ipykernel install --user --name neurodevenv_test --display-name "Python (neurodevenv_test)"
