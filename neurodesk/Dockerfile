@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
 
 # Set username and password
 ARG NB_USER=pamcconnell
-ARG NB_PASSWORD=Br@1nz!
+#ARG NB_PASSWORD=Br@1nz
 ARG NB_UID=1100
 ARG NB_GID=1100
 ENV NB_USER=${NB_USER} NB_UID=${NB_UID} NB_GID=${NB_GID}
