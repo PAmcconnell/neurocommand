@@ -36,11 +36,12 @@ RUN groupadd -g ${NB_GID} ${NB_USER} && \
 
 # Switch to the new user
 USER ${NB_USER}
+RUN cd ${HOME}
+USER root
 
 # Install Oh My Zsh
-RUN cd ${HOME} && \
-    echo "no sh -c wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O" && \
-    sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" "" --unattended
+RUN wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O install.sh
+RUN  sh install.sh
 
 # Install Zinit
 RUN mkdir -p "${HOME}/.local/share/zinit" && \
