@@ -6,7 +6,7 @@ COPY . /neurodesk/
 WORKDIR /neurodesk
 
 # Switch to root user for package installation
-USER root
+#USER root
 
 # Install required packages
 RUN sudo apt-get update && apt-get install -y \
@@ -53,7 +53,7 @@ RUN mkdir -p "${HOME}/.local/share/zinit" && \
 #     git clone --depth=1 https://github.com/zsh-users/zsh-completions.git ${ZSH}/custom/plugins/zsh-completions
 
 # Switch back to root for file operations
-USER root
+#USER root
 
 # Copy custom .zshrc and .p10k.zsh and fix permissions
 COPY .zshrc ${HOME}/.zshrc
