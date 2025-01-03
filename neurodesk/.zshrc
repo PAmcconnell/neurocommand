@@ -21,8 +21,10 @@ export MAMBA_ROOT_PREFIX=/home/$USER/mamba
 
 # Mamba initialization
 if [ -f "/opt/conda/etc/profile.d/mamba.sh" ]; then
+    export PATH="/opt/conda/bin:$PATH" && \
     . "/opt/conda/etc/profile.d/mamba.sh"
 fi
+
 
 # Activate the neurodevenv_test environment
 if command -v mamba > /dev/null; then
@@ -33,3 +35,9 @@ fi
 
 # Clean duplicate entries in PATH
 export PATH=$(perl -e 'print join(":", grep { !$seen{$_}++ } split(/:/, $ENV{PATH}))')
+
+if ! mamba activate neurodevenv_test; then
+    echo "Failed to activate neurodevenv_test environment. Ensure it exists."
+fi
+
+source ~/.zshrc
