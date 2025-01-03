@@ -1,102 +1,45 @@
 # Base image
 FROM vnmd/neurodesktop:2024-12-06
 
-# Copy Neurodesk content
-COPY . /neurodesk/
+# Set working directory and copy content
 WORKDIR /neurodesk
-
-# Switch to root user for package installation
-#USER root
-
-# Install required packages
-RUN sudo apt-get update && apt-get install -y \
-    zsh \
-    git \
-    curl \
-    wget \
-    fonts-powerline \
-    perl \
-    && apt-get clean
+COPY . /neurodesk/
 
 # Set username and password
 ARG NB_USER=pamcconnell
-#ARG NB_PASSWORD=Br@1nz
 ARG NB_UID=1100
 ARG NB_GID=1100
-ENV NB_USER=${NB_USER} NB_UID=${NB_UID} NB_GID=${NB_GID}
-ENV HOME=/home/${NB_USER}
-ENV ZSH="${HOME}/.oh-my-zsh"
+ENV NB_USER=${NB_USER} \
+    NB_UID=${NB_UID} \
+    NB_GID=${NB_GID} \
+    HOME=/home/${NB_USER} \
+    ZSH="${HOME}/.oh-my-zsh"
 
-# Dynamically create a user with a unique UID and GID
-RUN if ! id -u ${NB_USER} > /dev/null 2>&1; then \
-    groupadd -f -g ${NB_GID} ${NB_USER} || echo "Group ${NB_GID} already exists"; \
-    useradd -m -s /bin/zsh -u ${NB_UID} -g ${NB_GID} ${NB_USER} || echo "User with UID ${NB_UID} already exists"; \
-    echo "${NB_USER}:${NB_PASSWORD}" | chpasswd; \
-    adduser ${NB_USER} sudo; \
-    fi
+# Add user and install required packages
+RUN apt-get update && apt-get install -y zsh git curl wget fonts-powerline perl && apt-get clean && \
+    groupadd -f -g ${NB_GID} ${NB_USER} && \
+    useradd -m -s /bin/zsh -u ${NB_UID} -g ${NB_GID} ${NB_USER} && \
+    echo "${NB_USER}:neurodesk" | chpasswd && \
+    adduser ${NB_USER} sudo && \
+    RUNZSH=no sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" || echo "Oh My Zsh already installed"
 
 # Switch to the new user
 USER ${NB_USER}
-WORKDIR /home/${NB_USER}
-
-# Install Oh My Zsh
-RUN wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O - | zsh || echo "Oh My Zsh already installed"
-
-# Install Zinit
-RUN mkdir -p "${HOME}/.local/share/zinit" && \
+# Install Oh My Zsh and Zinit
+RUN RUNZSH=no sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)" || echo "Oh My Zsh already installed" && \
+    mkdir -p "${HOME}/.local/share/zinit" && \
     zsh -c "$(curl -fsSL https://raw.githubusercontent.com/zdharma-continuum/zinit/main/scripts/install.sh)"
-
-# # Set up Powerlevel10k and plugins
-# RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH}/custom/themes/powerlevel10k && \
-#     git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git ${ZSH}/custom/plugins/zsh-autosuggestions && \
-#     git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH}/custom/plugins/zsh-syntax-highlighting && \
-#     git clone --depth=1 https://github.com/zsh-users/zsh-completions.git ${ZSH}/custom/plugins/zsh-completions
-
-# Switch back to root for file operations
-#USER root
-
-# Copy custom .zshrc and .p10k.zsh and fix permissions
 COPY .zshrc ${HOME}/.zshrc
 COPY .bashrc ${HOME}/.bashrc
-COPY .p10k.zsh ${HOME}/.p10k.zsh
-RUN sudo chown ${NB_USER}:${NB_USER} ${HOME}/.zshrc ${HOME}/.p10k.zsh
-RUN sudo chsh -s /usr/bin/zsh ${NB_USER}
+RUN chown ${NB_USER}:${NB_USER} ${HOME}/.zshrc ${HOME}/.bashrc
 
-# Switch back to user
-USER ${NB_USER}
+# Switch to Zsh as the default shell
+# Add environment configuration and change default shell
+RUN chsh -s /usr/bin/zsh ${NB_USER} && \
+# Add environment configuration
+RUN echo "export USER=${NB_USER}" >> ${HOME}/.zshrc && \
+    apt-get clean && \
+    chown ${NB_USER}:${NB_USER} ${HOME}/.zshrc ${HOME}/.bashrc
 
-# Add configurations
-RUN echo "export USER=${NB_USER}" >> ${HOME}/.zshrc
-RUN echo "mamba init zsh"
-RUN echo "zsh"
-RUN echo "source ${HOME}/.zshrc"
-
-# # Install Python environment with mamba
-# RUN echo 'export PATH=${MAMBA_ROOT_PREFIX}/bin:${PATH}' >> ${HOME}/.zshrc
-
-# # Initialize mamba for zsh
-# RUN mamba init zsh && \
-#     mamba create -n neurodevenv_test python=3.10 ipykernel -y && \
-#     mamba run -n neurodevenv_test python -m ipykernel install --user --name neurodevenv_test --display-name "Python (neurodevenv_test)"
-
-# # Install additional Python packages
-# RUN pip install bids-validator pybids nilearn nipype
-
-# Set entrypoint to Zsh
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["/usr/bin/zsh"]
 HEALTHCHECK NONE
-
-# RUN source ${HOME}/.zshrc
-# HEALTHCHECK CMD [ "/bin/bash", "-c", "/etc/jupyter/docker_healthcheck.py || echo 'Health check failed' && exit 1" ]
-# RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-
-# docker run -it --entrypoint /bin/bash neurodesk:custom
-
-# docker run -it --rm \
-#     --shm-size=1gb --user=root --cap-add=SYS_ADMIN --security-opt=apparmor:unconfined \
-#     --device=/dev/fuse --name neurodesk \
-#     -v ~/neurodesktop-storage:/neurodesktop-storage \
-#     -p 8888:8888 \
-#     -e NB_USER=pamcconnell \
-#     neurodesk:custom
