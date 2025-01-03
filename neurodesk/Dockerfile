@@ -60,6 +60,7 @@ USER root
 COPY .zshrc ${HOME}/.zshrc
 COPY .p10k.zsh ${HOME}/.p10k.zsh
 RUN chown ${NB_USER}:${NB_USER} ${HOME}/.zshrc ${HOME}/.p10k.zsh
+RUN chsh -s /bin/zsh ${NB_USER}
 
 # Switch back to user
 USER ${NB_USER}
