@@ -1,4 +1,10 @@
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+
+# Set up paths
+cd /home/$(whoami)/
+export HOME=$(pwd)
+export PATH="$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
+
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
@@ -12,8 +18,17 @@ fi
 # exec 2>>$ZSH_DEBUG_LOG
 # set -x
 
-# Set up paths
-export PATH="$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
+# Install Oh My Zsh
+USER ${NB_USER}
+
+# Path to Oh My Zsh installation
+mkdir -p $HOME/.oh-my-zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+export ZSH="$HOME/.oh-my-zsh"
+
+# Install Zinit
+mkdir -p ~/.local/share/zinit
+zsh -c "$(curl -fsSL https://raw.githubusercontent.com/zdharma-continuum/zinit/main/scripts/install.sh)"
 
 # Add Zinit snippet paths
 export PATH="$HOME/.local/share/zinit/snippets:$PATH"
@@ -21,9 +36,6 @@ export PATH="$HOME/.local/share/zinit/polaris/bin:$PATH"
 
 # Remove duplicate entries
 export PATH=$(perl -e 'print join(":", grep { !$seen{$_}++ } split(/:/, $ENV{PATH}))')
-
-# Path to Oh My Zsh installation
-export ZSH="$HOME/.oh-my-zsh"
 
 # Zinit installation and setup
 export ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"

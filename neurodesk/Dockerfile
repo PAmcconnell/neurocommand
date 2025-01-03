@@ -15,7 +15,7 @@ ENV NB_USER=${NB_USER} \
     HOME=/home/${NB_USER} \
     ZSH="${HOME}/.oh-my-zsh"
 
-# Ensure root user and install required packages
+# Switch to root and install packages
 USER root
 RUN apt-get update && apt-get install -y \
     sudo \
@@ -24,29 +24,24 @@ RUN apt-get update && apt-get install -y \
     curl \
     wget \
     fonts-powerline \
-    perl && \
+    perl \
+    python3 \
+    python3-pip \
+    python3-venv && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create user and set permissions
-RUN groupadd -g ${NB_GID} ${NB_USER} && \
-    useradd -m -s /usr/bin/zsh -u ${NB_UID} -g ${NB_GID} ${NB_USER} && \
-    echo "${NB_USER}:neurodesk" | chpasswd && \
+RUN if ! getent group ${NB_GID}; then groupadd -g ${NB_GID} ${NB_USER}; fi && \
+    if ! id -u ${NB_USER} > /dev/null 2>&1; then \
+    useradd -m -s /usr/bin/zsh -u ${NB_UID} -g ${NB_GID} ${NB_USER}; \
+    fi && \
+    echo "${NB_USER}:neurodesk1!" | chpasswd && \
     usermod -aG sudo ${NB_USER} && \
-    echo "${NB_USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
-# Switch to the new user
-USER ${NB_USER}
-RUN cd ${HOME}
-USER root
-RUN cd /home/${NB_USER}
-
-# Install Oh My Zsh
-RUN  sh -c "$(wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-# Install Zinit
-USER ${NB_USER}
-RUN mkdir -p "${HOME}/.local/share/zinit" && \
-    zsh -c "$(curl -fsSL https://raw.githubusercontent.com/zdharma-continuum/zinit/main/scripts/install.sh)"
+    echo "${NB_USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    if ! getent group users; then groupadd -g 100 users; fi && \
+    usermod -aG users ${NB_USER} && \
+    chown -R ${NB_USER}:${NB_USER} /home/${NB_USER}
 
 # Copy custom shell configuration files
 COPY .zshrc ${HOME}/.zshrc
