@@ -46,11 +46,11 @@ RUN RUNZSH=no sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/ma
 RUN mkdir -p "${HOME}/.local/share/zinit" && \
     zsh -c "$(curl -fsSL https://raw.githubusercontent.com/zdharma-continuum/zinit/main/scripts/install.sh)"
 
-# Set up Powerlevel10k and plugins
-RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH}/custom/themes/powerlevel10k && \
-    git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git ${ZSH}/custom/plugins/zsh-autosuggestions && \
-    git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH}/custom/plugins/zsh-syntax-highlighting && \
-    git clone --depth=1 https://github.com/zsh-users/zsh-completions.git ${ZSH}/custom/plugins/zsh-completions
+# # Set up Powerlevel10k and plugins
+# RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH}/custom/themes/powerlevel10k && \
+#     git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git ${ZSH}/custom/plugins/zsh-autosuggestions && \
+#     git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH}/custom/plugins/zsh-syntax-highlighting && \
+#     git clone --depth=1 https://github.com/zsh-users/zsh-completions.git ${ZSH}/custom/plugins/zsh-completions
 
 # Switch back to root for file operations
 USER root
@@ -60,7 +60,7 @@ COPY .zshrc ${HOME}/.zshrc
 COPY .bashrc ${HOME}/.bashrc
 COPY .p10k.zsh ${HOME}/.p10k.zsh
 RUN chown ${NB_USER}:${NB_USER} ${HOME}/.zshrc ${HOME}/.p10k.zsh
-RUN chsh -s /bin/zsh ${NB_USER}
+RUN chsh -s /usr/bin/zsh ${NB_USER}
 
 # Switch back to user
 USER ${NB_USER}
@@ -75,18 +75,20 @@ RUN echo 'export PATH=${MAMBA_ROOT_PREFIX}/bin:${PATH}' >> ${HOME}/.zshrc
 # Initialize mamba for zsh
 RUN mamba init zsh && \
     mamba create -n neurodevenv_test python=3.10 ipykernel -y && \
-    mamba run -n neurodevenv_test python -m ipykernel install --user --name neurodevenv_test --display-name "Python (neurodevenv_test)" && \
-    echo "mamba activate neurodevenv_test" >> ${HOME}/.zshrc
+    mamba run -n neurodevenv_test python -m ipykernel install --user --name neurodevenv_test --display-name "Python (neurodevenv_test)"
 
-# Install additional Python packages
-RUN pip install bids-validator pybids nilearn nipype
-
-# Clean PATH duplicates
-# RUN echo "export PATH=$(perl -e 'print join(\":\", grep { !$seen{$_}++ } split(/:/, $ENV{PATH}))')" >>
-# pamcconnell/.zshrc
+# # Install additional Python packages
+# RUN pip install bids-validator pybids nilearn nipype
 
 # Set entrypoint to Zsh
-ENTRYPOINT ["/usr/bin/zsh"]
+ENTRYPOINT ["/usr/bin/zsh", "-l"]
+RUN source ${HOME}/.zshrc
+HEALTHCHECK CMD [ "/bin/bash", "-c", "/etc/jupyter/docker_healthcheck.py || echo 'Health check failed' && exit 1" ]
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+
+
+
 
 # docker run -it --entrypoint /bin/bash neurodesk:custom
 
