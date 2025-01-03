@@ -44,3 +44,10 @@ fi
 # eval "$(command conda shell.bash hook 2> /dev/null)"
 
 # Additional configurations or custom aliases can go here
+# Source the Zsh configuration
+
+if [ -f ~/.zshrc ]; then
+    source ~/.zshrc
+else
+    echo "Zsh configuration file (~/.zshrc) not found."
+fi

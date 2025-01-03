@@ -81,10 +81,12 @@ RUN mamba init zsh && \
 # RUN pip install bids-validator pybids nilearn nipype
 
 # Set entrypoint to Zsh
-ENTRYPOINT ["/usr/bin/zsh", "-l"]
-RUN source ${HOME}/.zshrc
-HEALTHCHECK CMD [ "/bin/bash", "-c", "/etc/jupyter/docker_healthcheck.py || echo 'Health check failed' && exit 1" ]
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+ENTRYPOINT ["/bin/bash", "-c"]
+HEALTHCHECK NONE
+
+# RUN source ${HOME}/.zshrc
+# HEALTHCHECK CMD [ "/bin/bash", "-c", "/etc/jupyter/docker_healthcheck.py || echo 'Health check failed' && exit 1" ]
+# RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
 
