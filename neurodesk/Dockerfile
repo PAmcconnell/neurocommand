@@ -69,17 +69,19 @@ RUN echo "export USER=root" >> ${HOME}/.zshrc && \
     echo "export USER=${NB_USER}" >> ${HOME}/.zshrc
 
 # Install Python environment with mamba
-RUN echo 'export MAMBA_ROOT_PREFIX=/home/${NB_USER}/mamba' >> ${HOME}/.zshrc && \
-    mamba init && \
+RUN echo 'export MAMBA_ROOT_PREFIX=/home/${NB_USER}/mamba' >> ${HOME}/.zshrc
+
+# Initialize mamba for zsh
+RUN mamba init zsh && \
     mamba create -n neurodevenv_test python=3.10 ipykernel -y && \
-    echo "mamba activate neurodevenv_test" >> ${HOME}/.zshrc && \
-    python -m ipykernel install --user --name neurodevenv_test --display-name "Python (neurodevenv_test)"
+    mamba run -n neurodevenv_test python -m ipykernel install --user --name neurodevenv_test --display-name "Python (neurodevenv_test)" && \
+    echo "mamba activate neurodevenv_test" >> ${HOME}/.zshrc
 
 # Install additional Python packages
 RUN pip install bids-validator pybids nilearn nipype
 
 # Clean PATH duplicates
-RUN echo 'export PATH=$(perl -e "print join(\":\", grep { !\\$seen{\\$_}++ } split(/:/, \\$ENV{PATH}))")' >> ${HOME}/.zshrc
+RUN echo "export PATH=$(perl -e 'print join(":", grep { !$seen{$_}++ } split(/:/, $ENV{PATH}))" >> ${HOME}/.zshrc
 
 # Set entrypoint to Zsh
 ENTRYPOINT ["/bin/zsh"]
@@ -92,6 +94,4 @@ ENTRYPOINT ["/bin/zsh"]
 #     -v ~/neurodesktop-storage:/neurodesktop-storage \
 #     -p 8888:8888 \
 #     -e NB_USER=pamcconnell \
-#     -e NB_UID=$(id -u) \
-#     -e NB_GID=$(id -g) \
 #     neurodesk:custom
